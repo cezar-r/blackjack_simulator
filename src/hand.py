@@ -6,6 +6,7 @@ class Hand:
 	def __init__(self, hand = []):
 		self.init()
 		self.hand = hand
+		self.rating = self._init_rating()
 
 	def __str__(self):
 		return_str = ''
@@ -43,6 +44,7 @@ class Hand:
 
 		card1, card2 = self._get_rating()
 		if not card2:
+			self.is_soft = False
 			if card1 == 21:
 				self.blackjack = True
 			elif card1 > 21:

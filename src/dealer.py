@@ -13,6 +13,9 @@ class Dealer:
 
 	def reset(self):
 		self.cur_hand = []
+		if self.shoe.hit_cut:
+			self.shoe = Shoe(8, 2)
+			self.count = 0
 
 	def get_cur_hand_display(self, first = False):
 		if first:

@@ -29,3 +29,10 @@ class Shoe:
 		if self.cards_dealt / 52 >= self.num_decks - self.cut:
 			self.hit_cut = True
 		return return_card
+
+
+	def size(self):
+		return len(self.shoe)
+
+	def reset(self):
+		self.shoe = self._init_shoe()

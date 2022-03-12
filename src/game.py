@@ -8,8 +8,11 @@ players = [AdvantagePlayer('Cezar')]
 
 class Game:
 
-	def __init__(self, players):
+	def __init__(self, players, count, verbose = False):
+		self.games = 1
 		self.players = players
+		self.verbose = verbose
+		self.count = count
 		self.dealer = Dealer(players)
 
 
@@ -22,22 +25,31 @@ class Game:
 		self.dealer.reset()
 
 	def play_round(self):
-		os.system('cls' if os.name == 'nt' else 'clear')
+		if self.verbose:
+			os.system('cls' if os.name == 'nt' else 'clear')
 
 		self._init()
 		self.cur_players = self.players.copy()
 		self.take_bets()
 		self.dealer.deal()
-		self.display(stood = True)
+		if self.verbose:
+			self.display(stood = True)
 		self.check_blackjack()
 		self.decision(first = True)
-		# self.check_winner()
+
 
 		while True:
 			if self.check_winners():
-				return
-			self.display(not self.all_players_stand())
+				break
+			if self.verbose:	
+				self.display(not self.all_players_stand())
 			self.decision()
+
+		if self.count:
+
+			for player in self.cur_players:
+				player.evaluate_count(self.dealer)
+		self.games += 1
 
 
 	def take_bets(self):
@@ -58,14 +70,15 @@ class Game:
 		for player in self.cur_players:
 			for hand in player.cur_hand:
 				
-				if not hand.bust and not hand.blackjack and not hand.stood:
+				if not hand.bust and not hand.blackjack and not hand.stood and not player.doubled_down:
 					return False
 		return self.eval_winners()
 
 
 	def eval_winners(self):
 		self.dealer.hit()
-		self.display()
+		if self.verbose:
+			self.display()
 
 		dealer_score = self.dealer.final_rating()
 
@@ -78,17 +91,22 @@ class Game:
 						if player.doubled_down:
 							player.balance += player.bet_size * 2
 						player.balance += player.bet_size * 2
-						print(f'{player.name} wins!')
+						if self.verbose:
+							print(f'{player.name} wins!')
 					elif dealer_score > player_score:
-						print('Dealer wins!')
+						if self.verbose:
+							print('Dealer wins!')
 					else:
-						print('Push!')
+						if self.verbose:
+							print('Push!')
 						player.balance += player.bet_size 
 
 				else:
-					print('Bust!')
+					if self.verbose:
+						print('Bust!')
 
-		print('-------------------------------\n\n')
+		if self.verbose:
+			print('-------------------------------\n\n')
 
 		return True
 
@@ -113,29 +131,35 @@ class Game:
 			for idx, hand in enumerate(player.cur_hand):
 				print(f'{player.name}: {hand} ({player.get_cur_hand_rating(idx)}) - ${player.balance}')
 
-		# print(f"Count: {self.dealer.get_count()}")
+		print(f"\nCount: {self.dealer.get_count()}\n")
 
 
 	def decision(self, first = False):
 		for player in self.cur_players:
 			for idx, hand in enumerate(player.cur_hand):
 
-				decision = player.decision(self.dealer, hand, first)
-
-				if not hand.blackjack and not hand.bust and not hand.stood:
-					# if first:
-					# 	decision = int(input('Hit[0]\tStand[1]\tSplit[2]\tDouble Down[3]\t\n'))
-					# else:
-					# 	decision = int(input('Hit[0]\tStand[1]\n'))
+				if not hand.blackjack and not hand.bust and not hand.stood and not player.doubled_down:
 					decision = player.decision(self.dealer, hand, first)
+					# decision = int(input())
 					if decision == 0:
+						if self.verbose:
+							print('Hit!')
 						card = self.dealer.pop_card()
 						player.hit(card, idx)
 					if decision == 1:
+						if self.verbose:
+							print('Stand!')
 						player.stand(idx)
 					if decision == 2:
+						if self.verbose:
+							print('Split!')
 						player.split()
+
+						card = self.dealer.pop_card()
+						player.hit(card, 0)
 					if decision == 3:
+						if self.verbose:
+							print('Double Down!')
 						card = self.dealer.pop_card()
 						player.double_down()
 						player.hit(card, idx)
@@ -148,7 +172,7 @@ if __name__ == '__main__':
 
 
 	players = [AdvantagePlayer('Cezar')]
-	game = Game(players)
+	game = Game(players, verbose = True)
 	play_again = 1
 	while play_again == 1:
 
